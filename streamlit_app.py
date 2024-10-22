@@ -112,4 +112,24 @@ if uploaded_file:
 
         max_module = latest_data.loc[latest_data['온도'].idxmax()]
 
-        st.write(f"📈 각 모듈번호
+        # 올바른 문자열 닫기 구문
+        st.write(f"📈 각 모듈번호의 현재 온도:")
+        st.dataframe(latest_data[['모듈번호', '온도']])
+
+        st.write(f"🔥 가장 높은 온도를 가진 모듈번호: **{max_module['모듈번호']}** 온도: **{max_module['온도']}°C**")
+        st.write(f"🌡️ 일평균 온도: {daily_avg_temp:.2f}°C")
+        st.write(f"🔺 일주일 최고 온도: {max_temp}°C")
+        st.write(f"🔻 일주일 최저 온도: {min_temp}°C")
+
+        last_24_hours = datetime.now() - timedelta(hours=24)
+        recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
+        hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
+
+        st.subheader("최근 24시간 시간대별 평균 온도")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
+        ax.set_title('최근 24시간 시간대별 평균 온도')
+        ax.set_xlabel('시간대 (시)')
+        ax.set_ylabel('평균 온도 (°C)')
+        plt.grid(True)
+        st.pyplot(fig)

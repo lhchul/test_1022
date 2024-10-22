@@ -44,13 +44,22 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (다운로드 버튼 글자색 파란색 설정)
+# CSS 스타일 적용 (글자 크기와 버튼 색상 설정)
 def set_css():
     st.markdown(
         """
         <style>
         .stDownloadButton > button {
             color: blue !important;
+        }
+        .large-font {
+            font-size: 24px !important;
+        }
+        .medium-font {
+            font-size: 20px !important;
+        }
+        .small-font {
+            font-size: 18px !important;
         }
         </style>
         """, 
@@ -70,9 +79,9 @@ def plot_hourly_avg(data):
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=15)
-    ax.set_xlabel('시간대 (시)', fontsize=12)
-    ax.set_ylabel('평균 온도 (°C)', fontsize=12)
+    ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=20)
+    ax.set_xlabel('시간대 (시)', fontsize=18)
+    ax.set_ylabel('평균 온도 (°C)', fontsize=18)
     plt.grid(True)
     st.pyplot(fig)
 
@@ -83,9 +92,9 @@ def plot_two_weeks_avg(data):
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('2주 평균 온도', fontsize=15)
-    ax.set_xlabel('날짜 (월-일)', fontsize=12)
-    ax.set_ylabel('평균 온도 (°C)', fontsize=12)
+    ax.set_title('2주 평균 온도', fontsize=20)
+    ax.set_xlabel('날짜 (월-일)', fontsize=18)
+    ax.set_ylabel('평균 온도 (°C)', fontsize=18)
     plt.xticks(rotation=45)
     plt.grid(True)
     st.pyplot(fig)
@@ -95,9 +104,9 @@ def plot_daily_max(data):
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('하루 중 최대 온도', fontsize=15)
-    ax.set_xlabel('날짜 (월-일)', fontsize=12)
-    ax.set_ylabel('최대 온도 (°C)', fontsize=12)
+    ax.set_title('하루 중 최대 온도', fontsize=20)
+    ax.set_xlabel('날짜 (월-일)', fontsize=18)
+    ax.set_ylabel('최대 온도 (°C)', fontsize=18)
     plt.xticks(rotation=45)
     plt.grid(True)
     st.pyplot(fig)
@@ -113,7 +122,7 @@ def download_csv(data, filename):
     )
 
 # Streamlit 앱 타이틀
-st.title("🌡️ 온도 모니터링 대시보드")
+st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시보드</h1>', unsafe_allow_html=True)
 
 # CSS 설정 적용
 set_css()
@@ -159,14 +168,14 @@ if uploaded_file is not None:
     max_module = latest_data.loc[latest_data['온도'].idxmax()]
 
     # 통계 정보 출력
-    st.write(f"📈 **각 모듈번호의 현재 온도:**")
+    st.markdown('<p class="medium-font">📈 <b>각 모듈번호의 현재 온도:</b></p>', unsafe_allow_html=True)
     st.dataframe(latest_data[['모듈번호', '온도']])
 
-    st.write(f"🔥 **가장 높은 온도를 가진 모듈번호:** {max_module['모듈번호']} (온도: {max_module['온도']}°C)")
-    st.write(f"🌡️ **일평균 온도:** {daily_avg_temp:.2f}°C")
+    st.markdown(f'<p class="medium-font">🔥 <b>가장 높은 온도를 가진 모듈번호:</b> {max_module["모듈번호"]} (온도: {max_module["온도"]}°C)</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="medium-font">🌡️ <b>일평균 온도:</b> {daily_avg_temp:.2f}°C</p>', unsafe_allow_html=True)
     
     # 일주일 최고/최저 온도 표시 (31도 이상 빨간색)
-    st.write("🔺 **일주일 최고/최저 온도:**")
+    st.markdown('<p class="medium-font">🔺 <b>일주일 최고/최저 온도:</b></p>', unsafe_allow_html=True)
     styled_week_data = pd.DataFrame({
         '최고 온도': [max_temp],
         '최저 온도': [min_temp]

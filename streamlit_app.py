@@ -57,6 +57,10 @@ def set_css():
         .medium-font {
             font-size: 20px !important;
         }
+        .bold-larger {
+            font-size: 22px !important;
+            font-weight: bold !important;
+        }
         .bold-large {
             font-size: 20px !important;
             font-weight: bold !important;
@@ -91,7 +95,8 @@ if uploaded_file is not None:
 
     # 통합국명 목록 정렬 및 선택
     unique_locations = sorted(data['통합국명'].unique())
-    selected_location = st.selectbox("📍 통합국명을 선택하세요:", ["전체"] + unique_locations)
+    st.markdown('<p class="bold-larger">📍 통합국명을 선택하세요:</p>', unsafe_allow_html=True)
+    selected_location = st.selectbox("", ["전체"] + unique_locations)
 
     # 선택된 통합국명 데이터 필터링
     if selected_location == "전체":

@@ -110,13 +110,13 @@ if uploaded_file is not None:
     # 최신 온도 데이터 추출
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
 
-    # 일별 평균 온도 계산
-    daily_avg_temp_data = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].mean().reset_index()
+    # 최근 1주일 평균 온도 계산
+    one_week_ago = datetime.now() - timedelta(days=7)
+    week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
+    daily_avg_temp_data = week_data.groupby(week_data['날짜'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
     # 일주일 최고/최저 온도 계산
-    one_week_ago = datetime.now() - timedelta(days=7)
-    week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
     max_temp_row = week_data.loc[week_data['온도'].idxmax()]
     min_temp_row = week_data.loc[week_data['온도'].idxmin()]
 
@@ -129,8 +129,8 @@ if uploaded_file is not None:
 
     st.markdown(f'<p class="medium-font">🔥 <b>가장 높은 온도를 가진 모듈번호:</b> {max_module["모듈번호"]} (온도: {max_module["온도"]}°C)</p>', unsafe_allow_html=True)
 
-    # 일별 평균 온도 출력
-    st.markdown('<p class="medium-font">🌡️ <b>일별 평균 온도:</b></p>', unsafe_allow_html=True)
+    # 최근 1주일 평균 온도 출력
+    st.markdown('<p class="medium-font">🌡️ <b>최근 1주일 평균 온도:</b></p>', unsafe_allow_html=True)
     st.dataframe(daily_avg_temp_data)
 
     # 일주일 최고/최저 온도 표시
@@ -146,7 +146,7 @@ if uploaded_file is not None:
     st.markdown('<p class="bold-large">📊 보고 싶은 그래프를 선택하세요:</p>', unsafe_allow_html=True)
     graph_type = st.selectbox(
         "",
-        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도", "일별 평균 온도"]
+        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도"]
     )
 
     # 그래프 그리기 함수
@@ -188,7 +188,4 @@ if uploaded_file is not None:
             ax.set_ylabel('최대 온도 (°C)', fontsize=16)
             plt.xticks(rotation=45)
             plt.grid(True)
-            st.pyplot(fig)
-
-    # 선택된 그래프 그리기
-    plot_graph(graph_type)
+           

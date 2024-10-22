@@ -5,24 +5,37 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 
-# 폰트 경로를 자동 감지하고 적용하는 함수
-def set_font():
-    font_dir = os.path.join(os.getcwd(), 'fonts')  # 현재 작업 경로의 fonts 폴더
-    font_path = os.path.join(font_dir, 'NanumGothic.ttf')
+# 폰트 경로를 자동 탐색하는 함수
+def find_font_path(font_name="NanumGothic"):
+    font_dir = os.path.join(os.getcwd(), 'fonts')  # 현재 작업 디렉터리의 'fonts' 폴더
+    font_path = os.path.join(font_dir, f"{font_name}.ttf")
 
-    if not os.path.exists(font_path):
+    # 폰트가 존재하는지 확인
+    if os.path.exists(font_path):
+        return font_path
+    else:
+        # 예외 처리 및 오류 메시지 출력
         st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
-        return
+        return None
 
-    try:
-        font_prop = fm.FontProperties(fname=font_path)
-        plt.rcParams['font.family'] = font_prop.get_name()
-        plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
-        st.success(f"폰트 설정 성공: {font_prop.get_name()}")
-    except Exception as e:
-        st.error(f"폰트 설정 실패: {e}")
-        plt.rcParams['font.family'] = 'sans-serif'  # 기본 폰트로 폴백
+# 폰트 설정 함수
+def set_font():
+    font_path = find_font_path()  # NanumGothic.ttf 경로 탐색
 
+    if font_path:
+        try:
+            font_prop = fm.FontProperties(fname=font_path)
+            plt.rcParams['font.family'] = font_prop.get_name()
+            plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
+            st.success(f"폰트 설정 성공: {font_prop.get_name()}")
+        except Exception as e:
+            st.error(f"폰트 설정 실패: {e}")
+            plt.rcParams['font.family'] = 'sans-serif'  # 기본 폰트로 폴백
+    else:
+        st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
+        plt.rcParams['font.family'] = 'sans-serif'
+
+# 폰트 설정 적용
 set_font()
 
 # 폴더 생성 함수 (이미지 저장용)

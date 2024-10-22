@@ -5,23 +5,18 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 
-# 폰트 경로를 자동 탐색하는 함수
-def find_font_path(font_name="NanumGothic"):
-    font_dir = os.path.join(os.getcwd(), 'fonts')  # 현재 작업 디렉터리의 'fonts' 폴더
-    font_path = os.path.join(font_dir, f"{font_name}.ttf")
-
-    # 폰트가 존재하는지 확인
+# Windows 환경에서 폰트 경로 설정
+def find_windows_font():
+    font_path = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
     if os.path.exists(font_path):
         return font_path
     else:
-        # 예외 처리 및 오류 메시지 출력
         st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
         return None
 
 # 폰트 설정 함수
 def set_font():
-    font_path = find_font_path()  # NanumGothic.ttf 경로 탐색
-
+    font_path = find_windows_font()
     if font_path:
         try:
             font_prop = fm.FontProperties(fname=font_path)

@@ -57,9 +57,9 @@ def set_css():
         unsafe_allow_html=True
     )
 
-# 일주일 최고 온도 스타일링 함수
+# 일주일 최고 온도 스타일링 함수 (31도 이상 빨간색)
 def highlight_max_temp(val):
-    color = 'red' if val >= 35 else 'black'
+    color = 'red' if val >= 31 else 'black'
     return f'color: {color}'
 
 # 그래프를 그리는 함수들 정의
@@ -106,7 +106,7 @@ def plot_daily_max(data):
 def download_csv(data, filename):
     csv = data.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
-        label="CSV 다운로드 (다른 이름으로 저장하시겠습니까?)",
+        label="CSV 다운로드",
         data=csv,
         file_name=filename,
         mime='text/csv'
@@ -165,7 +165,7 @@ if uploaded_file is not None:
     st.write(f"🔥 **가장 높은 온도를 가진 모듈번호:** {max_module['모듈번호']} (온도: {max_module['온도']}°C)")
     st.write(f"🌡️ **일평균 온도:** {daily_avg_temp:.2f}°C")
     
-    # 일주일 최고/최저 온도 표시 (35도 이상 빨간색)
+    # 일주일 최고/최저 온도 표시 (31도 이상 빨간색)
     st.write("🔺 **일주일 최고/최저 온도:**")
     styled_week_data = pd.DataFrame({
         '최고 온도': [max_temp],

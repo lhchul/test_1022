@@ -43,7 +43,7 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (글자 크기, 버튼 색상 및 진한 글자 설정)
+# CSS 스타일 적용 (글자 크기 및 진한 글자 설정)
 def set_css():
     st.markdown(
         """
@@ -60,7 +60,6 @@ def set_css():
         .bold-large {
             font-size: 20px !important;
             font-weight: bold !important;
-            color: black;
         }
         </style>
         """, 
@@ -186,4 +185,5 @@ if uploaded_file is not None:
             ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('일단위 최대 온도', fontsize=18)
             ax.set_xlabel('날짜 (월-일)', fontsize=16)
-            ax.set_ylabel('최대 온도 (°C)',
+            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45

@@ -5,16 +5,22 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 
-# 폰트 캐시 초기화 및 강제 설정
+# 강제 폰트 설정 함수
 def set_font():
     try:
-        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 경로 확인
+        # 프로젝트 폴더 내 폰트 경로 설정 (예: fonts/NanumGothic.ttf)
+        font_path = "fonts/NanumGothic.ttf"  
         font_prop = fm.FontProperties(fname=font_path)
+        
+        # matplotlib의 폰트 설정을 강제로 업데이트
         plt.rcParams['font.family'] = font_prop.get_name()
-        st.success(f"폰트 설정: {font_prop.get_name()}")
+        plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
+
+        st.success(f"폰트 설정 성공: {font_prop.get_name()}")
     except Exception as e:
         st.warning(f"폰트 설정 실패: {e}")
-        plt.rcParams['font.family'] = 'sans-serif'  # 기본 폰트로 대체
+        # 기본 폰트로 폴백
+        plt.rcParams['font.family'] = 'sans-serif'
 
 set_font()
 

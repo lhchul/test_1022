@@ -33,7 +33,6 @@ def set_font():
             font_prop = fm.FontProperties(fname=font_path)
             plt.rcParams['font.family'] = font_prop.get_name()
             plt.rcParams['axes.unicode_minus'] = False
-            st.success(f"폰트 설정 성공: {font_prop.get_name()}")
         except Exception as e:
             st.error(f"폰트 설정 실패: {e}")
             plt.rcParams['font.family'] = 'sans-serif'
@@ -44,7 +43,7 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (글자 크기와 버튼 색상 설정)
+# CSS 스타일 적용 (글자 크기, 버튼 색상 및 진한 글자 설정)
 def set_css():
     st.markdown(
         """
@@ -58,6 +57,11 @@ def set_css():
         .medium-font {
             font-size: 20px !important;
         }
+        .bold-large {
+            font-size: 20px !important;
+            font-weight: bold !important;
+            color: black;
+        }
         </style>
         """, 
         unsafe_allow_html=True
@@ -68,61 +72,11 @@ def highlight_max_temp(val):
     color = 'red' if val >= 31 else 'black'
     return f'color: {color}'
 
-# 그래프를 그리는 함수들 정의
-def plot_hourly_avg(data):
-    last_24_hours = datetime.now() - timedelta(hours=24)
-    recent_data = data[data['날짜'] >= last_24_hours]
-    hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=20)
-    ax.set_xlabel('시간대 (시)', fontsize=18)
-    ax.set_ylabel('평균 온도 (°C)', fontsize=18)
-    plt.grid(True)
-    st.pyplot(fig)
-
-def plot_two_weeks_avg(data):
-    two_weeks_ago = datetime.now() - timedelta(days=14)
-    two_weeks_data = data[data['날짜'] >= two_weeks_ago]
-    two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('2주 평균 온도', fontsize=20)
-    ax.set_xlabel('날짜 (월-일)', fontsize=18)
-    ax.set_ylabel('평균 온도 (°C)', fontsize=18)
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    st.pyplot(fig)
-
-def plot_daily_max(data):
-    daily_max = data.groupby(data['날짜'].dt.date)['온도'].max()
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
-    ax.set_title('하루 중 최대 온도', fontsize=20)
-    ax.set_xlabel('날짜 (월-일)', fontsize=18)
-    ax.set_ylabel('최대 온도 (°C)', fontsize=18)
-    plt.xticks(rotation=45)
-    plt.grid(True)
-    st.pyplot(fig)
-
-# 선택한 데이터를 CSV로 저장하고 다운로드 링크 제공
-def download_csv(data, filename):
-    csv = data.to_csv(index=False).encode('utf-8-sig')
-    st.download_button(
-        label="CSV 다운로드",
-        data=csv,
-        file_name=filename,
-        mime='text/csv'
-    )
+# CSS 설정 적용
+set_css()
 
 # Streamlit 앱 타이틀
 st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시보드</h1>', unsafe_allow_html=True)
-
-# CSS 설정 적용
-set_css()
 
 # CSV 파일 업로드
 uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type="csv")
@@ -132,8 +86,9 @@ if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
     data['날짜'] = pd.to_datetime(data['날짜'])
 
-    # 결측값을 제외하고 데이터 필터링
+    # 결측값과 온도가 0인 행 제외
     data = data.dropna(subset=['온도'])
+    data = data[data['온도'] > 0]
 
     # 통합국명 목록 정렬 및 선택
     unique_locations = sorted(data['통합국명'].unique())
@@ -146,20 +101,25 @@ if uploaded_file is not None:
         filtered_data = data[data['통합국명'] == selected_location]
 
     # 선택된 통합국명 데이터 다운로드 버튼
-    download_csv(filtered_data, f"{selected_location}_온도데이터.csv")
+    st.download_button(
+        label="CSV 다운로드",
+        data=filtered_data.to_csv(index=False).encode('utf-8-sig'),
+        file_name=f"{selected_location}_온도데이터.csv",
+        mime='text/csv'
+    )
 
     # 최신 온도 데이터 추출
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
 
-    # 일주일 최고/최저 온도 계산 (최저 온도가 0보다 큰 값만 표시)
+    # 일별 평균 온도 계산
+    daily_avg_temp_data = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].mean().reset_index()
+    daily_avg_temp_data.columns = ['날짜', '평균 온도']
+
+    # 일주일 최고/최저 온도 계산
     one_week_ago = datetime.now() - timedelta(days=7)
     week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
-    max_temp = week_data['온도'].max()
-    min_temp = week_data[week_data['온도'] > 0]['온도'].min()
-
-    # 일평균 온도 계산
-    today_data = filtered_data[filtered_data['날짜'].dt.date == datetime.now().date()]
-    daily_avg_temp = today_data['온도'].mean()
+    max_temp_row = week_data.loc[week_data['온도'].idxmax()]
+    min_temp_row = week_data.loc[week_data['온도'].idxmin()]
 
     # 최고 온도 모듈 찾기
     max_module = latest_data.loc[latest_data['온도'].idxmax()]
@@ -169,31 +129,61 @@ if uploaded_file is not None:
     st.dataframe(latest_data[['모듈번호', '온도']])
 
     st.markdown(f'<p class="medium-font">🔥 <b>가장 높은 온도를 가진 모듈번호:</b> {max_module["모듈번호"]} (온도: {max_module["온도"]}°C)</p>', unsafe_allow_html=True)
-    st.markdown(f'<p class="medium-font">🌡️ <b>일평균 온도:</b> {daily_avg_temp:.2f}°C</p>', unsafe_allow_html=True)
 
-    # 일주일 최고/최저 온도 표시 (31도 이상 빨간색)
+    # 일별 평균 온도 출력
+    st.markdown('<p class="medium-font">🌡️ <b>일별 평균 온도:</b></p>', unsafe_allow_html=True)
+    st.dataframe(daily_avg_temp_data)
+
+    # 일주일 최고/최저 온도 표시
     st.markdown('<p class="medium-font">🔺 <b>일주일 최고/최저 온도:</b></p>', unsafe_allow_html=True)
     styled_week_data = pd.DataFrame({
-        '최고 온도': [max_temp],
-        '최저 온도 (0도 이상)': [min_temp]
-    }).style.applymap(highlight_max_temp, subset=['최고 온도'])
+        '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
+        '온도': [max_temp_row['온도'], min_temp_row['온도']],
+        '유형': ['최고 온도', '최저 온도']
+    }).style.applymap(highlight_max_temp, subset=['온도'])
     st.dataframe(styled_week_data)
 
-    # 그래프 종류 선택
+    # 그래프 선택
+    st.markdown('<p class="bold-large">📊 보고 싶은 그래프를 선택하세요:</p>', unsafe_allow_html=True)
     graph_type = st.selectbox(
-        "📊 보고 싶은 그래프를 선택하세요:",
-        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "하루 중 최대 온도"]
+        "",
+        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도", "일별 평균 온도"]
     )
 
-    # 그래프 그리기
-    if graph_type == "전체 보기":
-        st.write("📊 **전체 그래프 보기**")
-        plot_hourly_avg(filtered_data)
-        plot_two_weeks_avg(filtered_data)
-        plot_daily_max(filtered_data)
-    elif graph_type == "최근 24시간 평균 온도":
-        plot_hourly_avg(filtered_data)
-    elif graph_type == "2주 평균 온도":
-        plot_two_weeks_avg(filtered_data)
-    elif graph_type == "하루 중 최대 온도":
-        plot_daily_max(filtered_data)
+    # 그래프 그리기 함수
+    def plot_graph(graph_type):
+        if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
+            last_24_hours = datetime.now() - timedelta(hours=24)
+            recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
+            hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
+            ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=18)
+            ax.set_xlabel('시간대 (시)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            plt.grid(True)
+            st.pyplot(fig)
+
+        if graph_type in ["전체 보기", "2주 평균 온도"]:
+            two_weeks_ago = datetime.now() - timedelta(days=14)
+            two_weeks_data = filtered_data[filtered_data['날짜'] >= two_weeks_ago]
+            two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
+            ax.set_title('2주 평균 온도', fontsize=18)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45)
+            plt.grid(True)
+            st.pyplot(fig)
+
+        if graph_type in ["전체 보기", "일단위 최대 온도"]:
+            daily_max = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].max()
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
+            ax.set_title('일단위 최대 온도', fontsize=18)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('최대 온도 (°C)',

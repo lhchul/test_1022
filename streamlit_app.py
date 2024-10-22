@@ -43,7 +43,7 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (글자 크기 조정과 버튼 색상 설정)
+# CSS 스타일 적용 (글자 크기와 버튼 색상 설정)
 def set_css():
     st.markdown(
         """
@@ -56,6 +56,10 @@ def set_css():
         }
         .medium-font {
             font-size: 18px !important;
+        }
+        .bold-large {
+            font-size: 20px !important;
+            font-weight: bold !important;
         }
         </style>
         """, 
@@ -106,18 +110,15 @@ if uploaded_file is not None:
     # 최신 온도 데이터 추출
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
 
+    # 일별 평균 온도 계산
+    daily_avg_temp_data = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].mean().reset_index()
+    daily_avg_temp_data.columns = ['날짜', '평균 온도']
+
     # 일주일 최고/최저 온도 계산
     one_week_ago = datetime.now() - timedelta(days=7)
     week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
     max_temp_row = week_data.loc[week_data['온도'].idxmax()]
     min_temp_row = week_data.loc[week_data['온도'].idxmin()]
-
-    # 일평균 온도 계산
-    today_data = filtered_data[filtered_data['날짜'].dt.date == datetime.now().date()]
-    if not today_data.empty:
-        daily_avg_temp = today_data['온도'].mean()
-    else:
-        daily_avg_temp = "N/A"
 
     # 최고 온도 모듈 찾기
     max_module = latest_data.loc[latest_data['온도'].idxmax()]
@@ -127,7 +128,10 @@ if uploaded_file is not None:
     st.dataframe(latest_data[['모듈번호', '온도']])
 
     st.markdown(f'<p class="medium-font">🔥 <b>가장 높은 온도를 가진 모듈번호:</b> {max_module["모듈번호"]} (온도: {max_module["온도"]}°C)</p>', unsafe_allow_html=True)
-    st.markdown(f'<p class="medium-font">🌡️ <b>일평균 온도:</b> {daily_avg_temp}°C</p>', unsafe_allow_html=True)
+
+    # 일별 평균 온도 출력
+    st.markdown('<p class="medium-font">🌡️ <b>일별 평균 온도:</b></p>', unsafe_allow_html=True)
+    st.dataframe(daily_avg_temp_data)
 
     # 일주일 최고/최저 온도 표시
     st.markdown('<p class="medium-font">🔺 <b>일주일 최고/최저 온도:</b></p>', unsafe_allow_html=True)
@@ -139,14 +143,15 @@ if uploaded_file is not None:
     st.dataframe(styled_week_data)
 
     # 그래프 선택
+    st.markdown('<p class="bold-large">📊 보고 싶은 그래프를 선택하세요:</p>', unsafe_allow_html=True)
     graph_type = st.selectbox(
-        "📊 보고 싶은 그래프를 선택하세요:",
-        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "하루 중 최대 온도"]
+        "",
+        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "하루 중 최대 온도", "일별 평균 온도"]
     )
 
     # 그래프 그리기 함수
     def plot_graph(graph_type):
-        if graph_type == "최근 24시간 평균 온도":
+        if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
             last_24_hours = datetime.now() - timedelta(hours=24)
             recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
             hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
@@ -159,7 +164,7 @@ if uploaded_file is not None:
             plt.grid(True)
             st.pyplot(fig)
 
-        elif graph_type == "2주 평균 온도":
+        if graph_type in ["전체 보기", "2주 평균 온도"]:
             two_weeks_ago = datetime.now() - timedelta(days=14)
             two_weeks_data = filtered_data[filtered_data['날짜'] >= two_weeks_ago]
             two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
@@ -173,7 +178,7 @@ if uploaded_file is not None:
             plt.grid(True)
             st.pyplot(fig)
 
-        elif graph_type == "하루 중 최대 온도":
+        if graph_type in ["전체 보기", "하루 중 최대 온도"]:
             daily_max = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].max()
 
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -185,5 +190,5 @@ if uploaded_file is not None:
             plt.grid(True)
             st.pyplot(fig)
 
-    # 선택된 그래프 그리기
-    plot_graph(graph_type)
+        if graph_type in ["전체 보기", "일별 평균 온도"]:
+            fig, ax = plt.subplots(figsize

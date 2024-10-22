@@ -5,26 +5,23 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 
+# 폰트 캐시 초기화 및 강제 설정
+def set_font():
+    try:
+        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # 경로 확인
+        font_prop = fm.FontProperties(fname=font_path)
+        plt.rcParams['font.family'] = font_prop.get_name()
+        st.success(f"폰트 설정: {font_prop.get_name()}")
+    except Exception as e:
+        st.warning(f"폰트 설정 실패: {e}")
+        plt.rcParams['font.family'] = 'sans-serif'  # 기본 폰트로 대체
+
+set_font()
+
 # 폴더 생성 함수 (이미지 저장용)
 def ensure_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
-
-# 시스템 폰트 중 'NanumGothic' 폰트 자동 탐색
-def find_nanum_font():
-    font_list = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-    for font in font_list:
-        if "NanumGothic" in font:
-            return font
-    return None
-
-# 폰트 설정
-font_path = find_nanum_font()
-if font_path:
-    font_prop = fm.FontProperties(fname=font_path)
-    plt.rc('font', family=font_prop.get_name())
-else:
-    st.warning("⚠️ 'NanumGothic' 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
 
 # 그래프를 이미지로 저장하고 경로 반환
 def save_plot(fig, filename):

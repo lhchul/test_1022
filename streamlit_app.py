@@ -7,7 +7,7 @@ import os
 
 # Windows 환경에서 폰트 경로 설정
 def find_windows_font():
-    font_path = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
+    font_path = r"C:\Users\SKTelecom\Downloads\NanumGothic.ttf"
     if os.path.exists(font_path):
         return font_path
     else:

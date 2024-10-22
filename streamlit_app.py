@@ -191,4 +191,4 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         if graph_type in ["전체 보기", "일별 평균 온도"]:
-            fig, ax = plt.subplots(figsize
+            fig, ax

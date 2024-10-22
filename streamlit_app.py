@@ -33,7 +33,7 @@ def save_plot(fig, filename):
     return filepath
 
 # Streamlit 앱 타이틀
-st.title("온도 모니터링 대시보드")
+st.title("온도 모니터링 대시보드_TEST")
 
 # CSV 파일 업로드
 uploaded_file = st.file_uploader("CSV 파일을 업로드하세요:", type="csv")

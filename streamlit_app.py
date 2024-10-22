@@ -44,6 +44,24 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
+# CSS 스타일 적용 (다운로드 버튼 글자색 파란색 설정)
+def set_css():
+    st.markdown(
+        """
+        <style>
+        .stDownloadButton > button {
+            color: blue !important;
+        }
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+
+# 일주일 최고 온도 스타일링 함수
+def highlight_max_temp(val):
+    color = 'red' if val >= 35 else 'black'
+    return f'color: {color}'
+
 # 그래프를 그리는 함수들 정의
 def plot_hourly_avg(data):
     last_24_hours = datetime.now() - timedelta(hours=24)
@@ -88,7 +106,7 @@ def plot_daily_max(data):
 def download_csv(data, filename):
     csv = data.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
-        label="CSV 다운로드",
+        label="CSV 다운로드 (다른 이름으로 저장하시겠습니까?)",
         data=csv,
         file_name=filename,
         mime='text/csv'
@@ -96,6 +114,9 @@ def download_csv(data, filename):
 
 # Streamlit 앱 타이틀
 st.title("🌡️ 온도 모니터링 대시보드")
+
+# CSS 설정 적용
+set_css()
 
 # CSV 파일 업로드
 uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type="csv")
@@ -143,8 +164,14 @@ if uploaded_file is not None:
 
     st.write(f"🔥 **가장 높은 온도를 가진 모듈번호:** {max_module['모듈번호']} (온도: {max_module['온도']}°C)")
     st.write(f"🌡️ **일평균 온도:** {daily_avg_temp:.2f}°C")
-    st.write(f"🔺 **일주일 최고 온도:** {max_temp}°C")
-    st.write(f"🔻 **일주일 최저 온도:** {min_temp}°C")
+    
+    # 일주일 최고/최저 온도 표시 (35도 이상 빨간색)
+    st.write("🔺 **일주일 최고/최저 온도:**")
+    styled_week_data = pd.DataFrame({
+        '최고 온도': [max_temp],
+        '최저 온도': [min_temp]
+    }).style.applymap(highlight_max_temp, subset=['최고 온도'])
+    st.dataframe(styled_week_data)
 
     # 그래프 종류 선택
     graph_type = st.selectbox(

@@ -188,4 +188,7 @@ if uploaded_file is not None:
             ax.set_ylabel('최대 온도 (°C)', fontsize=16)
             plt.xticks(rotation=45)
             plt.grid(True)
-           
+            st.pyplot(fig)
+
+    # 선택된 그래프 그리기
+    plot_graph(graph_type)

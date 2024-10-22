@@ -4,11 +4,26 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
+import platform
 
-# Windows 환경에서 폰트 경로 설정
-def find_windows_font():
-    font_path = r"C:\Users\SKTelecom\Downloads\NanumGothic.ttf"
-    if os.path.exists(font_path):
+# 운영체제에 맞게 폰트 경로를 찾는 함수
+def find_nanum_font():
+    system = platform.system()
+
+    if system == "Windows":
+        # Windows에서 NanumGothic.ttf 경로
+        font_dir = r"C:/usr/share/fonts/truetype/nanum/"
+        font_path = os.path.join(font_dir, "NanumGothic.ttf")
+    elif system == "Linux":
+        # Linux에서 NanumGothic.ttf 경로
+        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+    elif system == "Darwin":
+        # macOS에서 NanumGothic.ttf 경로
+        font_path = "/Library/Fonts/NanumGothic.ttf"
+    else:
+        font_path = None
+
+    if font_path and os.path.exists(font_path):
         return font_path
     else:
         st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
@@ -16,7 +31,7 @@ def find_windows_font():
 
 # 폰트 설정 함수
 def set_font():
-    font_path = find_windows_font()
+    font_path = find_nanum_font()
     if font_path:
         try:
             font_prop = fm.FontProperties(fname=font_path)
@@ -143,5 +158,4 @@ if uploaded_file is not None:
     ax3.set_ylabel('최대 온도 (°C)', fontsize=12)
     plt.xticks(rotation=45)
     plt.grid(True)
-    img3_path = save_plot(fig3, "daily_max.png")
-    st.image(img3_path)
+    img3_path = save_plot

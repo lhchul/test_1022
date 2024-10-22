@@ -119,6 +119,16 @@ if uploaded_file:
         st.write(f"🔺 일주일 최고 온도: {max_temp}°C")
         st.write(f"🔻 일주일 최저 온도: {min_temp}°C")
 
+        # 최근 24시간 시간대별 평균 온도 계산 (rec 문제 해결)
         last_24_hours = datetime.now() - timedelta(hours=24)
         recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
-        hourly_avg = rec
+        hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
+
+        st.subheader("최근 24시간 시간대별 평균 온도")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
+        ax.set_title('최근 24시간 시간대별 평균 온도')
+        ax.set_xlabel('시간대 (시)')
+        ax.set_ylabel('평균 온도 (°C)')
+        plt.grid(True)
+        st.pyplot(fig)

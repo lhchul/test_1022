@@ -88,7 +88,7 @@ def plot_daily_max(data):
 def download_csv(data, filename):
     csv = data.to_csv(index=False).encode('utf-8-sig')
     st.download_button(
-        label="CSV 다운로드 (다른 이름으로 저장하시겠습니까?)",
+        label="CSV 다운로드",
         data=csv,
         file_name=filename,
         mime='text/csv'

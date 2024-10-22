@@ -11,14 +11,11 @@ def find_nanum_font():
     system = platform.system()
 
     if system == "Windows":
-        # Windows에서 NanumGothic.ttf 경로
-        font_dir = r"C:/usr/share/fonts/truetype/nanum/"
-        font_path = os.path.join(font_dir, "NanumGothic.ttf")
+        font_dir = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts"
+        font_path = os.path.join(font_dir, "NanumGothic_0.ttf")
     elif system == "Linux":
-        # Linux에서 NanumGothic.ttf 경로
         font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
     elif system == "Darwin":
-        # macOS에서 NanumGothic.ttf 경로
         font_path = "/Library/Fonts/NanumGothic.ttf"
     else:
         font_path = None
@@ -48,27 +45,41 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# 폴더 생성 함수 (이미지 저장용)
-def ensure_dir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+# 파일 저장 경로 설정
+UPLOAD_DIR = "uploaded_files"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
-# 그래프를 이미지로 저장하고 경로 반환
-def save_plot(fig, filename):
-    ensure_dir("images")
-    filepath = os.path.join("images", filename)
-    fig.savefig(filepath, bbox_inches='tight')
-    return filepath
+# 파일을 session_state에 저장하고 외부 접근 가능하게 처리
+def save_file_to_session(uploaded_file):
+    if uploaded_file is not None:
+        file_path = os.path.join(UPLOAD_DIR, uploaded_file.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.session_state["uploaded_file_path"] = file_path
+        st.success(f"파일이 저장되었습니다: {file_path}")
+        st.write(f"[파일 다운로드](./{file_path})")  # 외부 접근 가능한 링크 제공
+
+# 파일 업로드 또는 session_state에서 파일 불러오기
+def get_uploaded_file():
+    if "uploaded_file_path" in st.session_state:
+        return st.session_state["uploaded_file_path"]
+    else:
+        uploaded_file = st.file_uploader("CSV 파일을 업로드하세요:", type="csv")
+        if uploaded_file:
+            save_file_to_session(uploaded_file)
+            return os.path.join(UPLOAD_DIR, uploaded_file.name)
+    return None
 
 # Streamlit 앱 타이틀
 st.title("온도 모니터링 대시보드")
 
-# CSV 파일 업로드
-uploaded_file = st.file_uploader("CSV 파일을 업로드하세요:", type="csv")
+# 업로드된 파일 가져오기
+file_path = get_uploaded_file()
 
-if uploaded_file is not None:
+if file_path:
     # CSV 파일 읽기 및 날짜 변환
-    data = pd.read_csv(uploaded_file)
+    data = pd.read_csv(file_path)
     data['날짜'] = pd.to_datetime(data['날짜'])
 
     # 결측값을 제외하고 데이터 필터링
@@ -130,16 +141,17 @@ if uploaded_file is not None:
     st.write(f"🔻 일주일 최저 온도: {min_temp}°C")
 
     # 그래프 1: 최근 24시간 평균 온도
+    st.subheader("최근 24시간 시간대별 평균 온도")
     fig1, ax1 = plt.subplots(figsize=(10, 5))
     ax1.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
     ax1.set_title('최근 24시간 시간대별 평균 온도', fontsize=15)
     ax1.set_xlabel('시간대 (시)', fontsize=12)
     ax1.set_ylabel('평균 온도 (°C)', fontsize=12)
     plt.grid(True)
-    img1_path = save_plot(fig1, "hourly_avg.png")
-    st.image(img1_path)
+    st.pyplot(fig1)
 
     # 그래프 2: 2주 평균 온도
+    st.subheader("2주 평균 온도")
     fig2, ax2 = plt.subplots(figsize=(10, 5))
     ax2.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
     ax2.set_title('2주 평균 온도', fontsize=15)
@@ -147,10 +159,10 @@ if uploaded_file is not None:
     ax2.set_ylabel('평균 온도 (°C)', fontsize=12)
     plt.xticks(rotation=45)
     plt.grid(True)
-    img2_path = save_plot(fig2, "two_weeks_avg.png")
-    st.image(img2_path)
+    st.pyplot(fig2)
 
     # 그래프 3: 하루 중 최대 온도
+    st.subheader("하루 중 최대 온도")
     fig3, ax3 = plt.subplots(figsize=(10, 5))
     ax3.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
     ax3.set_title('하루 중 최대 온도', fontsize=15)
@@ -158,4 +170,4 @@ if uploaded_file is not None:
     ax3.set_ylabel('최대 온도 (°C)', fontsize=12)
     plt.xticks(rotation=45)
     plt.grid(True)
-    img3_path = save_plot
+    st.pyplot(fig3)

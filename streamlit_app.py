@@ -67,7 +67,7 @@ def save_file(uploaded_file):
 
 # Flask 서버 시작 함수
 def start_flask():
-    app.run(port=8501)
+    app.run(port=8501, use_reloader=False)
 
 # Flask 서버를 별도의 스레드에서 실행
 threading.Thread(target=start_flask, daemon=True).start()
@@ -79,7 +79,7 @@ uploaded_file = st.file_uploader("CSV 파일을 업로드하세요:", type="csv"
 if uploaded_file:
     filename = save_file(uploaded_file)
     if filename:
-        # 올바른 f-string 구문 사용
+        # 파일 다운로드 링크 제공
         file_url = f"http://localhost:8501/files/{filename}"
         st.success(f"파일이 업로드되었습니다: [여기에서 보기]({file_url})")
 
@@ -112,10 +112,8 @@ if uploaded_file:
 
         max_module = latest_data.loc[latest_data['온도'].idxmax()]
 
-        # 올바른 문자열 닫기 구문
         st.write(f"📈 각 모듈번호의 현재 온도:")
         st.dataframe(latest_data[['모듈번호', '온도']])
-
         st.write(f"🔥 가장 높은 온도를 가진 모듈번호: **{max_module['모듈번호']}** 온도: **{max_module['온도']}°C**")
         st.write(f"🌡️ 일평균 온도: {daily_avg_temp:.2f}°C")
         st.write(f"🔺 일주일 최고 온도: {max_temp}°C")
@@ -123,13 +121,4 @@ if uploaded_file:
 
         last_24_hours = datetime.now() - timedelta(hours=24)
         recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
-        hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
-
-        st.subheader("최근 24시간 시간대별 평균 온도")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
-        ax.set_title('최근 24시간 시간대별 평균 온도')
-        ax.set_xlabel('시간대 (시)')
-        ax.set_ylabel('평균 온도 (°C)')
-        plt.grid(True)
-        st.pyplot(fig)
+        hourly_avg = rec

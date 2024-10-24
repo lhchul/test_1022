@@ -6,79 +6,70 @@ import matplotlib.font_manager as fm
 import os
 import platform
 
-# 운영체제에 맞게 폰트 경로를 찾는 함수
+# 운영체제별 폰트 경로 설정
 def find_nanum_font():
     system = platform.system()
-
     if system == "Windows":
-        font_path = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
+        return r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
     elif system == "Linux":
-        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+        return "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
     elif system == "Darwin":
-        font_path = "/Library/Fonts/NanumGothic.ttf"
-    else:
-        font_path = None
-
-    if font_path and os.path.exists(font_path):
-        return font_path
-    else:
-        st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
-        return None
+        return "/Library/Fonts/NanumGothic.ttf"
+    return None
 
 # 폰트 설정 함수
 def set_font():
     font_path = find_nanum_font()
-    if font_path:
-        try:
-            font_prop = fm.FontProperties(fname=font_path)
-            plt.rcParams['font.family'] = font_prop.get_name()
-            plt.rcParams['axes.unicode_minus'] = False
-        except Exception as e:
-            st.error(f"폰트 설정 실패: {e}")
-            plt.rcParams['font.family'] = 'sans-serif'
+    if font_path and os.path.exists(font_path):
+        font_prop = fm.FontProperties(fname=font_path)
+        plt.rcParams['font.family'] = font_prop.get_name()
     else:
         st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
         plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
 
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (글자 크기 및 진한 글자 설정)
-def set_css():
-    st.markdown(
-        """
-        <style>
-        .stDownloadButton > button {
-            color: blue !important;
-        }
-        .large-font {
-            font-size: 24px !important;
-        }
-        .medium-font {
-            font-size: 20px !important;
-        }
-        .bold-larger {
-            font-size: 22px !important;
-            font-weight: bold !important;
-        }
-        .bold-large {
-            font-size: 20px !important;
-            font-weight: bold !important;
-        }
-        </style>
-        """, 
-        unsafe_allow_html=True
-    )
+# CSS 스타일 설정 (NanumGothic 폰트 적용)
+st.markdown(
+    """
+    <style>
+    @font-face {
+        font-family: 'NanumGothic';
+        src: url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap');
+    }
+    html, body, [class*="css"] {
+        font-family: 'NanumGothic', sans-serif;
+    }
+    .stDownloadButton > button {
+        color: blue !important;
+    }
+    .large-font {
+        font-size: 24px !important;
+    }
+    .medium-font {
+        font-size: 20px !important;
+    }
+    .bold-larger {
+        font-size: 22px !important;
+        font-weight: bold !important;
+    }
+    .bold-large {
+        font-size: 20px !important;
+        font-weight: bold !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-# 일주일 최고 온도 스타일링 함수 (31도 이상 빨간색)
+# 일주일 최고 온도 색상 강조 함수
 def highlight_max_temp(val):
     color = 'red' if val >= 31 else 'black'
     return f'color: {color}'
 
-# CSS 설정 적용
-set_css()
-
-# Streamlit 앱 타이틀
+# 앱 타이틀
 st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시보드</h1>', unsafe_allow_html=True)
 
 # CSV 파일 업로드
@@ -104,7 +95,7 @@ if uploaded_file is not None:
     else:
         filtered_data = data[data['통합국명'] == selected_location]
 
-    # 선택된 통합국명 데이터 다운로드 버튼
+    # 데이터 다운로드 버튼
     st.download_button(
         label="CSV 다운로드",
         data=filtered_data.to_csv(index=False).encode('utf-8-sig'),
@@ -191,9 +182,4 @@ if uploaded_file is not None:
             ax.set_title('일단위 최대 온도', fontsize=18)
             ax.set_xlabel('날짜 (월-일)', fontsize=16)
             ax.set_ylabel('최대 온도 (°C)', fontsize=16)
-            plt.xticks(rotation=45)
-            plt.grid(True)
-            st.pyplot(fig)
-
-    # 선택된 그래프 그리기
-    plot_graph(graph_type)
+            plt.xticks

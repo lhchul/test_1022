@@ -133,7 +133,7 @@ if uploaded_file is not None:
         '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
         '온도': [max_temp_row['온도'], min_temp_row['온도']],
         '유형': ['최고 온도', '최저 온도']
-    }).style.applymap(lambda x: f'color: {"red" if x >= 31 else "black"}', subset=['온도'])
+    }).style.applymap(highlight_max_temp, subset=['온도'])
     st.dataframe(styled_week_data)
 
     st.markdown('<p class="bold-large">📊 보고 싶은 그래프를 선택하세요:</p>', unsafe_allow_html=True)
@@ -163,6 +163,18 @@ if uploaded_file is not None:
             ax.set_title('2주 평균 온도', fontsize=18)
             ax.set_xlabel('날짜 (월-일)', fontsize=16)
             ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45)
+            plt.grid(True)
+            st.pyplot(fig)
+
+        if graph_type in ["전체 보기", "일단위 최대 온도"]:
+            daily_max = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].max()
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
+            ax.set_title('일단위 최대 온도', fontsize=18)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
             plt.xticks(rotation=45)
             plt.grid(True)
             st.pyplot(fig)

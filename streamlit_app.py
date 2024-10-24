@@ -183,5 +183,3 @@ if uploaded_file is not None:
             ax.set_xlabel('날짜 (월-일)', fontsize=16)
             ax.set_ylabel('최대 온도 (°C)', fontsize=16)
             plt.xticks
-
-

@@ -9,6 +9,7 @@ import platform
 # 운영체제별 폰트 경로 설정 함수
 def find_nanum_font():
     system = platform.system()
+    font_path = None
 
     if system == "Windows":
         font_path = r"C:\Windows\Fonts\NanumGothic.ttf"
@@ -16,14 +17,18 @@ def find_nanum_font():
         font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
     elif system == "Darwin":  # MacOS
         font_path = "/Library/Fonts/NanumGothic.ttf"
-    else:
-        font_path = None
 
-    if font_path and os.path.exists(font_path):
-        return font_path
-    else:
-        st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
-        return None
+    # 폰트가 없을 경우 자동 검색
+    if not font_path or not os.path.exists(font_path):
+        font_paths = [f for f in fm.findSystemFonts() if 'NanumGothic' in f]
+        if font_paths:
+            font_path = font_paths[0]
+            st.success(f"자동 검색된 폰트 경로: {font_path}")
+        else:
+            st.error("NanumGothic 폰트를 찾을 수 없습니다.")
+            font_path = None
+
+    return font_path
 
 # 폰트 설정 함수
 def set_font():

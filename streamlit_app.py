@@ -11,7 +11,7 @@ def find_nanum_font():
     system = platform.system()
 
     if system == "Windows":
-        font_path = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
+        font_path = r"C:\Windows\Fonts\NanumGothic.ttf"
     elif system == "Linux":
         font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
     elif system == "Darwin":  # MacOS

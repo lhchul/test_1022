@@ -6,15 +6,15 @@ import matplotlib.font_manager as fm
 import os
 import platform
 
-# 운영체제에 맞게 폰트 경로를 찾는 함수
+# 운영체제별 폰트 경로 설정 함수
 def find_nanum_font():
     system = platform.system()
 
     if system == "Windows":
-        font_path = r"C:\Users\SKTelecom\AppData\Local\Microsoft\Windows\Fonts\NanumGothic_0.ttf"
+        font_path = r"C:\Windows\Fonts\NanumGothic.ttf"
     elif system == "Linux":
         font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-    elif system == "Darwin":
+    elif system == "Darwin":  # MacOS
         font_path = "/Library/Fonts/NanumGothic.ttf"
     else:
         font_path = None
@@ -43,7 +43,7 @@ def set_font():
 # 폰트 설정 적용
 set_font()
 
-# CSS 스타일 적용 (글자 크기 및 진한 글자 설정)
+# CSS 스타일 설정
 def set_css():
     st.markdown(
         """
@@ -70,41 +70,38 @@ def set_css():
         unsafe_allow_html=True
     )
 
-# 일주일 최고 온도 스타일링 함수 (31도 이상 빨간색)
+# 일주일 최고 온도 스타일링 함수
 def highlight_max_temp(val):
     color = 'red' if val >= 31 else 'black'
     return f'color: {color}'
 
-# CSS 설정 적용
+# CSS 적용
 set_css()
 
-# Streamlit 앱 타이틀
+# 타이틀 설정
 st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시보드</h1>', unsafe_allow_html=True)
 
 # CSV 파일 업로드
 uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type="csv")
 
 if uploaded_file is not None:
-    # CSV 파일 읽기 및 날짜 변환
     data = pd.read_csv(uploaded_file)
     data['날짜'] = pd.to_datetime(data['날짜'])
 
-    # 결측값과 온도가 0인 행 제외
+    # 결측값 및 온도 0 제거
     data = data.dropna(subset=['온도'])
     data = data[data['온도'] > 0]
 
-    # 통합국명 목록 정렬 및 선택
     unique_locations = sorted(data['통합국명'].unique())
     st.markdown('<p class="bold-larger">📍 통합국명을 선택하세요:</p>', unsafe_allow_html=True)
     selected_location = st.selectbox("", ["전체"] + unique_locations)
 
-    # 선택된 통합국명 데이터 필터링
     if selected_location == "전체":
         filtered_data = data
     else:
         filtered_data = data[data['통합국명'] == selected_location]
 
-    # 선택된 통합국명 데이터 다운로드 버튼
+    # 데이터 다운로드 버튼
     st.download_button(
         label="CSV 다운로드",
         data=filtered_data.to_csv(index=False).encode('utf-8-sig'),
@@ -112,20 +109,15 @@ if uploaded_file is not None:
         mime='text/csv'
     )
 
-    # 최신 온도 데이터 추출
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
 
-    # 최근 1주일 평균 온도 계산
     one_week_ago = datetime.now() - timedelta(days=7)
     week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
     daily_avg_temp_data = week_data.groupby(week_data['날짜'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
-    # 일주일 최고/최저 온도 계산
     max_temp_row = week_data.loc[week_data['온도'].idxmax()]
     min_temp_row = week_data.loc[week_data['온도'].idxmin()]
-
-    # 최고 온도 모듈 찾기
     max_module = latest_data.loc[latest_data['온도'].idxmax()]
 
     # 통계 정보 출력
@@ -134,12 +126,9 @@ if uploaded_file is not None:
 
     st.markdown(f'<p class="medium-font">🔥 <b>가장 높은 온도를 가진 모듈번호:</b> {max_module["모듈번호"]} (온도: {max_module["온도"]}°C)</p>', unsafe_allow_html=True)
 
-    # 최근 1주일 평균 온도 출력
     st.markdown('<p class="medium-font">🌡️ <b>최근 1주일 평균 온도:</b></p>', unsafe_allow_html=True)
     st.dataframe(daily_avg_temp_data)
 
-    # 일주일 최고/최저 온도 표시
-    st.markdown('<p class="medium-font">🔺 <b>일주일 최고/최저 온도:</b></p>', unsafe_allow_html=True)
     styled_week_data = pd.DataFrame({
         '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
         '온도': [max_temp_row['온도'], min_temp_row['온도']],
@@ -147,14 +136,9 @@ if uploaded_file is not None:
     }).style.applymap(highlight_max_temp, subset=['온도'])
     st.dataframe(styled_week_data)
 
-    # 그래프 선택
     st.markdown('<p class="bold-large">📊 보고 싶은 그래프를 선택하세요:</p>', unsafe_allow_html=True)
-    graph_type = st.selectbox(
-        "",
-        ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도"]
-    )
+    graph_type = st.selectbox("", ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도"])
 
-    # 그래프 그리기 함수
     def plot_graph(graph_type):
         if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
             last_24_hours = datetime.now() - timedelta(hours=24)
@@ -195,5 +179,4 @@ if uploaded_file is not None:
             plt.grid(True)
             st.pyplot(fig)
 
-    # 선택된 그래프 그리기
     plot_graph(graph_type)

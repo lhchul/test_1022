@@ -148,6 +148,9 @@ if uploaded_file is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=18)
+            ax.set_xlabel('시간대 (시)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            plt.grid(True)
             st.pyplot(fig)
 
         if graph_type in ["전체 보기", "2주 평균 온도"]:
@@ -158,6 +161,10 @@ if uploaded_file is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('2주 평균 온도', fontsize=18)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45)
+            plt.grid(True)
             st.pyplot(fig)
 
         if graph_type in ["전체 보기", "일단위 최대 온도"]:
@@ -166,6 +173,10 @@ if uploaded_file is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('일단위 최대 온도', fontsize=18)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45)
+            plt.grid(True)
             st.pyplot(fig)
 
     plot_graph(graph_type)

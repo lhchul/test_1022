@@ -28,14 +28,14 @@ def set_font():
     if font_path:
         try:
             font_prop = fm.FontProperties(fname=font_path)
-            plt.rc('font', family=font_prop.get_name())
+            plt.rcParams['font.family'] = font_prop.get_name()
             plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
         except Exception as e:
             st.error(f"폰트 설정 실패: {e}")
-            plt.rc('font', family='sans-serif')
+            plt.rcParams['font.family'] = 'sans-serif'
     else:
         st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
-        plt.rc('font', family='sans-serif')
+        plt.rcParams['font.family'] = 'sans-serif'
 
 # 폰트 설정 적용
 set_font()

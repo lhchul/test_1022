@@ -8,19 +8,8 @@ import platform
 
 # 운영체제별 폰트 경로 설정 함수
 def find_nanum_font():
-    system = platform.system()
-    font_path = None
+    font_path = "NanumGothic.ttf"
 
-  #  if system == "Windows":
-  #     font_path = r"C:\Windows\Fonts\NanumGothic.ttf"
-  #  elif system == "Linux":
-  #      font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-  #  elif system == "Darwin":  # MacOS
-  #      font_path = "/Library/Fonts/NanumGothic.ttf"
-    
-    font_path ="NanumGothic.ttf"
-
-    # 폰트가 없을 경우 자동 검색
     if not font_path or not os.path.exists(font_path):
         font_paths = [f for f in fm.findSystemFonts() if 'NanumGothic' in f]
         if font_paths:
@@ -39,7 +28,7 @@ def set_font():
         try:
             font_prop = fm.FontProperties(fname=font_path)
             plt.rcParams['font.family'] = font_prop.get_name()
-            plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 오류 해결
+            plt.rcParams['axes.unicode_minus'] = False
         except Exception as e:
             st.error(f"폰트 설정 실패: {e}")
             plt.rcParams['font.family'] = 'sans-serif'
@@ -123,8 +112,15 @@ if uploaded_file is not None:
     daily_avg_temp_data = week_data.groupby(week_data['날짜'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
-    max_temp_row = week_data.loc[week_data['온도'].idxmax()]
-    min_temp_row = week_data.loc[week_data['온도'].idxmin()]
+    # week_data가 비어 있는지 확인
+    if not week_data.empty:
+        max_temp_row = week_data.loc[week_data['온도'].idxmax()]
+        min_temp_row = week_data.loc[week_data['온도'].idxmin()]
+    else:
+        st.warning("최근 1주일 동안 유효한 데이터가 없습니다.")
+        max_temp_row = pd.Series({'날짜': None, '온도': None})
+        min_temp_row = pd.Series({'날짜': None, '온도': None})
+
     max_module = latest_data.loc[latest_data['온도'].idxmax()]
 
     # 통계 정보 출력
@@ -137,7 +133,7 @@ if uploaded_file is not None:
     st.dataframe(daily_avg_temp_data)
 
     styled_week_data = pd.DataFrame({
-        '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
+        '날짜': [max_temp_row['날짜'], min_temp_row['날짜']],
         '온도': [max_temp_row['온도'], min_temp_row['온도']],
         '유형': ['최고 온도', '최저 온도']
     }).style.applymap(highlight_max_temp, subset=['온도'])

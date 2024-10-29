@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import timedelta
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
@@ -42,17 +42,14 @@ set_font()
 
 # CSS 스타일 설정 함수
 def set_css():
-    st.markdown(
-        """
+    st.markdown("""
         <style>
         .stDownloadButton > button { color: blue !important; }
         .large-font { font-size: 24px !important; }
         .medium-font { font-size: 20px !important; }
         .bold-larger { font-size: 22px !important; font-weight: bold !important; }
         </style>
-        """, 
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
 # CSS 적용
 set_css()
@@ -86,11 +83,13 @@ if uploaded_file:
         mime='text/csv'
     )
 
-    # 최신 데이터 및 주간 통계 계산
+    # 데이터의 마지막 날짜를 기준으로 1주일 데이터 필터링
+    last_date = filtered_data['날짜'].max()
+    one_week_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(days=7)]
+
+    # 최신 데이터 및 1주일 평균 온도 계산
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
-    one_week_ago = datetime.now() - timedelta(days=7)
-    week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
-    daily_avg_temp_data = week_data.groupby(week_data['날짜'].dt.date)['온도'].mean().reset_index()
+    daily_avg_temp_data = one_week_data.groupby(one_week_data['날짜'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
     # 통계 정보 출력
@@ -104,8 +103,8 @@ if uploaded_file:
     st.dataframe(daily_avg_temp_data)
 
     # 주간 최고/최저 온도 데이터 표시
-    max_temp_row = week_data.loc[week_data['온도'].idxmax()]
-    min_temp_row = week_data.loc[week_data['온도'].idxmin()]
+    max_temp_row = one_week_data.loc[one_week_data['온도'].idxmax()]
+    min_temp_row = one_week_data.loc[one_week_data['온도'].idxmin()]
     styled_week_data = pd.DataFrame({
         '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
         '온도': [max_temp_row['온도'], min_temp_row['온도']],
@@ -118,7 +117,7 @@ if uploaded_file:
 
     def plot_graph(graph_type):
         if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
-            recent_data = filtered_data[filtered_data['날짜'] >= datetime.now() - timedelta(hours=24)]
+            recent_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(hours=24)]
             hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -130,7 +129,7 @@ if uploaded_file:
             st.pyplot(fig)
 
         if graph_type in ["전체 보기", "2주 평균 온도"]:
-            two_weeks_data = filtered_data[filtered_data['날짜'] >= datetime.now() - timedelta(days=14)]
+            two_weeks_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(days=14)]
             two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))

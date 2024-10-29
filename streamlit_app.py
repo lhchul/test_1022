@@ -82,7 +82,7 @@ uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type=
 
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
-    data['날짜'] = pd.to_datetime(data['날짜'])
+    data['최근'] = pd.to_datetime(data['최근'])
 
     # 결측값 및 온도 0 제거
     data = data.dropna(subset=['온도'])
@@ -105,11 +105,11 @@ if uploaded_file is not None:
         mime='text/csv'
     )
 
-    latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
+    latest_data = filtered_data.sort_values(by='최근', ascending=False).groupby('모듈번호').first().reset_index()
 
     one_week_ago = datetime.now() - timedelta(days=7)
-    week_data = filtered_data[filtered_data['날짜'] >= one_week_ago]
-    daily_avg_temp_data = week_data.groupby(week_data['날짜'].dt.date)['온도'].mean().reset_index()
+    week_data = filtered_data[filtered_data['최근'] >= one_week_ago]
+    daily_avg_temp_data = week_data.groupby(week_data['최근'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
     # week_data가 비어 있는지 확인
@@ -145,8 +145,8 @@ if uploaded_file is not None:
     def plot_graph(graph_type):
         if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
             last_24_hours = datetime.now() - timedelta(hours=24)
-            recent_data = filtered_data[filtered_data['날짜'] >= last_24_hours]
-            hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
+            recent_data = filtered_data[filtered_data['최근'] >= last_24_hours]
+            hourly_avg = recent_data.groupby(recent_data['최근'].dt.hour)['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(hourly_avg.index, hourly_avg.values, marker='o', linestyle='-', linewidth=2)
@@ -158,8 +158,8 @@ if uploaded_file is not None:
 
         if graph_type in ["전체 보기", "2주 평균 온도"]:
             two_weeks_ago = datetime.now() - timedelta(days=14)
-            two_weeks_data = filtered_data[filtered_data['날짜'] >= two_weeks_ago]
-            two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
+            two_weeks_data = filtered_data[filtered_data['최근'] >= two_weeks_ago]
+            two_weeks_avg = two_weeks_data.groupby(two_weeks_data['최근'].dt.strftime('%m-%d'))['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o', linestyle='-', linewidth=2)
@@ -171,7 +171,7 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         if graph_type in ["전체 보기", "일단위 최대 온도"]:
-            daily_max = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].max()
+            daily_max = filtered_data.groupby(filtered_data['최근'].dt.date)['온도'].max()
 
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)

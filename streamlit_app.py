@@ -178,4 +178,10 @@ if uploaded_file is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('일단위 최대 온도', fontsize=18)
-            ax.set_xlabel('날짜 (월-일)', fontsize=16
+            ax.set_xlabel('날짜 (월-일)', fontsize=16)
+            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
+            plt.xticks(rotation=45)
+            plt.grid(True)
+            st.pyplot(fig)
+
+    plot_graph(graph_type)

@@ -66,8 +66,10 @@ def set_css():
         unsafe_allow_html=True
     )
 
-# 일주일 최고 온도 스타일링 함수
+# 수정된 일주일 최고 온도 스타일링 함수
 def highlight_max_temp(val):
+    if pd.isna(val):  # val이 None 또는 NaN인 경우 처리
+        return 'color: black'
     color = 'red' if val >= 31 else 'black'
     return f'color: {color}'
 
@@ -176,10 +178,4 @@ if uploaded_file is not None:
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(daily_max.index, daily_max.values, marker='o', linestyle='-', linewidth=2)
             ax.set_title('일단위 최대 온도', fontsize=18)
-            ax.set_xlabel('날짜 (월-일)', fontsize=16)
-            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
-            plt.xticks(rotation=45)
-            plt.grid(True)
-            st.pyplot(fig)
-
-    plot_graph(graph_type)
+            ax.set_xlabel('날짜 (월-일)', fontsize=16

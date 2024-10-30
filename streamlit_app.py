@@ -2,52 +2,12 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import os
-import platform
-
-# 📌 운영체제별 폰트 경로 설정 및 확인 함수
-def find_nanum_font():
-    system = platform.system()
-    font_paths = {
-        "Windows": r"C:\Windows\Fonts\NanumGothic.ttf",
-        "Linux": "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-        "Darwin": "/Library/Fonts/NanumGothic.ttf"
-    }
-    font_path = font_paths.get(system)
-
-    if font_path and os.path.exists(font_path):
-        st.success(f"폰트 파일을 찾았습니다: {font_path}")
-        return font_path
-    else:
-        st.warning(f"폰트 파일을 찾을 수 없습니다: {font_path}. 기본 폰트를 사용합니다.")
-        return None
-
-# 📌 폰트 설정 함수
-def set_font():
-    font_path = find_nanum_font()
-    if font_path:
-        try:
-            font_prop = fm.FontProperties(fname=font_path)
-            plt.rcParams['font.family'] = font_prop.get_name()
-            plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
-        except Exception as e:
-            st.error(f"폰트 설정 실패: {e}")
-            plt.rcParams['font.family'] = 'sans-serif'
-    else:
-        plt.rcParams['font.family'] = 'sans-serif'
+import koreanize_matplotlib  # 한글 폰트 설정
 
 # 📌 CSS 스타일 적용 함수
 def set_css():
     st.markdown("""
         <style>
-        @font-face {
-            font-family: 'NanumGothic';
-            src: url('C:/Windows/Fonts/NanumGothic.ttf') format('truetype');
-        }
-        body {
-            font-family: 'NanumGothic', sans-serif;
-        }
         .stDownloadButton > button { 
             color: white !important; 
             background-color: #4CAF50 !important;
@@ -58,8 +18,7 @@ def set_css():
         </style>
     """, unsafe_allow_html=True)
 
-# 📌 폰트와 CSS 적용
-set_font()
+# 📌 CSS 적용
 set_css()
 
 # 📌 타이틀 설정

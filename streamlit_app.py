@@ -6,7 +6,7 @@ import matplotlib.font_manager as fm
 import os
 import platform
 
-# 📌 폰트 경로 설정 및 존재 여부 확인 함수
+# 📌 운영체제별 폰트 경로 설정 및 확인 함수
 def find_nanum_font():
     system = platform.system()
     font_paths = {
@@ -20,7 +20,7 @@ def find_nanum_font():
         st.success(f"폰트 파일을 찾았습니다: {font_path}")
         return font_path
     else:
-        st.warning(f"폰트 파일을 찾을 수 없습니다: {font_path}")
+        st.warning(f"폰트 파일을 찾을 수 없습니다: {font_path}. 기본 폰트를 사용합니다.")
         return None
 
 # 📌 폰트 설정 함수
@@ -35,7 +35,6 @@ def set_font():
             st.error(f"폰트 설정 실패: {e}")
             plt.rcParams['font.family'] = 'sans-serif'
     else:
-        st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
         plt.rcParams['font.family'] = 'sans-serif'
 
 # 📌 CSS 스타일 적용 함수
@@ -70,6 +69,7 @@ st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시
 uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type="csv")
 
 if uploaded_file:
+    # 📌 데이터 처리
     data = pd.read_csv(uploaded_file)
     data['날짜'] = pd.to_datetime(data['날짜'])
 
@@ -77,7 +77,7 @@ if uploaded_file:
     data = data.dropna(subset=['온도'])
     data = data[data['온도'] > 0]
 
-    # 📌 통합국명 선택 및 필터링
+    # 📌 통합국명 선택 및 데이터 필터링
     unique_locations = sorted(data['통합국명'].unique())
     st.markdown('<p class="bold-larger">📍 통합국명을 선택하세요:</p>', unsafe_allow_html=True)
     selected_location = st.selectbox("", ["전체"] + unique_locations)

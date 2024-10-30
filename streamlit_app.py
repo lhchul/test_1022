@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import os
 import platform
+import shutil
+import ctypes
 
-# 운영체제별 폰트 경로 설정 함수
+# 📌 1. 운영체제별 폰트 경로 찾기
 def find_nanum_font():
     system = platform.system()
     font_paths = {
@@ -22,7 +24,7 @@ def find_nanum_font():
         st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
         return None
 
-# 폰트 설정 함수
+# 📌 2. 폰트 설정
 def set_font():
     font_path = find_nanum_font()
     if font_path:
@@ -37,38 +39,45 @@ def set_font():
         st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
         plt.rcParams['font.family'] = 'sans-serif'
 
-# 폰트 설정 적용
-set_font()
-
-# CSS 스타일 설정 함수
+# 📌 3. CSS 스타일 적용
 def set_css():
     st.markdown("""
         <style>
-        .stDownloadButton > button { color: blue !important; }
+        @font-face {
+            font-family: 'NanumGothic';
+            src: url('C:/Windows/Fonts/NanumGothic.ttf') format('truetype');
+        }
+        body {
+            font-family: 'NanumGothic', sans-serif;
+        }
+        .stDownloadButton > button { 
+            color: white !important; 
+            background-color: #4CAF50 !important;
+        }
         .large-font { font-size: 24px !important; }
         .medium-font { font-size: 20px !important; }
         .bold-larger { font-size: 22px !important; font-weight: bold !important; }
         </style>
     """, unsafe_allow_html=True)
 
-# CSS 적용
+# 폰트와 CSS 적용
+set_font()
 set_css()
 
-# 타이틀 설정
+# 📌 4. 타이틀 및 파일 업로드 UI 설정
 st.markdown('<h1 class="large-font">🌡️ 통합국 온도 모니터링 대시보드</h1>', unsafe_allow_html=True)
-
-# CSV 파일 업로드
 uploaded_file = st.file_uploader("📁 CSV 파일을 업로드하세요:", type="csv")
 
+# 📌 5. 데이터 처리 및 시각화
 if uploaded_file:
     data = pd.read_csv(uploaded_file)
     data['날짜'] = pd.to_datetime(data['날짜'])
 
-    # 결측값 및 온도 0 제거
+    # 결측값 제거 및 온도 0 이상 데이터 필터링
     data = data.dropna(subset=['온도'])
     data = data[data['온도'] > 0]
 
-    # 통합국명 선택 및 데이터 필터링
+    # 통합국명 선택 및 필터링
     unique_locations = sorted(data['통합국명'].unique())
     st.markdown('<p class="bold-larger">📍 통합국명을 선택하세요:</p>', unsafe_allow_html=True)
     selected_location = st.selectbox("", ["전체"] + unique_locations)
@@ -83,16 +92,16 @@ if uploaded_file:
         mime='text/csv'
     )
 
-    # 데이터의 마지막 날짜를 기준으로 1주일 데이터 필터링
+    # 최근 1주일 데이터 필터링
     last_date = filtered_data['날짜'].max()
     one_week_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(days=7)]
 
-    # 최신 데이터 및 1주일 평균 온도 계산
+    # 각 모듈의 최신 온도 및 주간 평균 온도
     latest_data = filtered_data.sort_values(by='날짜', ascending=False).groupby('모듈번호').first().reset_index()
     daily_avg_temp_data = one_week_data.groupby(one_week_data['날짜'].dt.date)['온도'].mean().reset_index()
     daily_avg_temp_data.columns = ['날짜', '평균 온도']
 
-    # 통계 정보 출력
+    # 📌 통계 정보 출력
     st.markdown('<p class="medium-font">📈 <b>각 모듈번호의 현재 온도:</b></p>', unsafe_allow_html=True)
     st.dataframe(latest_data[['모듈번호', '온도']])
 
@@ -102,55 +111,31 @@ if uploaded_file:
     st.markdown('<p class="medium-font">🌡️ <b>최근 1주일 평균 온도:</b></p>', unsafe_allow_html=True)
     st.dataframe(daily_avg_temp_data)
 
-    # 주간 최고/최저 온도 데이터 표시
-    max_temp_row = one_week_data.loc[one_week_data['온도'].idxmax()]
-    min_temp_row = one_week_data.loc[one_week_data['온도'].idxmin()]
-    styled_week_data = pd.DataFrame({
-        '날짜': [max_temp_row['날짜'].date(), min_temp_row['날짜'].date()],
-        '온도': [max_temp_row['온도'], min_temp_row['온도']],
-        '유형': ['최고 온도', '최저 온도']
-    }).style.applymap(lambda val: 'color: red' if val >= 31 else 'color: black', subset=['온도'])
-    st.dataframe(styled_week_data)
-
-    # 그래프 선택 및 시각화
-    graph_type = st.selectbox("📊 보고 싶은 그래프를 선택하세요:", ["전체 보기", "최근 24시간 평균 온도", "2주 평균 온도", "일단위 최대 온도"])
-
+    # 📌 그래프 시각화 함수
     def plot_graph(graph_type):
-        if graph_type in ["전체 보기", "최근 24시간 평균 온도"]:
+        if graph_type == "최근 24시간 평균 온도":
             recent_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(hours=24)]
             hourly_avg = recent_data.groupby(recent_data['날짜'].dt.hour)['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(hourly_avg.index, hourly_avg.values, marker='o')
             ax.set_title('최근 24시간 시간대별 평균 온도', fontsize=18)
-            ax.set_xlabel('', fontsize=0)  # 가로축 제목 삭제
-            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=14)
             plt.grid(True)
             st.pyplot(fig)
 
-        if graph_type in ["전체 보기", "2주 평균 온도"]:
+        elif graph_type == "2주 평균 온도":
             two_weeks_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(days=14)]
             two_weeks_avg = two_weeks_data.groupby(two_weeks_data['날짜'].dt.strftime('%m-%d'))['온도'].mean()
 
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.plot(two_weeks_avg.index, two_weeks_avg.values, marker='o')
             ax.set_title('2주 평균 온도', fontsize=18)
-            ax.set_xlabel('', fontsize=0)  # 가로축 제목 삭제
-            ax.set_ylabel('평균 온도 (°C)', fontsize=16)
+            ax.set_ylabel('평균 온도 (°C)', fontsize=14)
             plt.xticks(rotation=45)
             plt.grid(True)
             st.pyplot(fig)
 
-        if graph_type in ["전체 보기", "일단위 최대 온도"]:
-            daily_max = filtered_data.groupby(filtered_data['날짜'].dt.date)['온도'].max()
-
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(daily_max.index, daily_max.values, marker='o')
-            ax.set_title('일단위 최대 온도', fontsize=18)
-            ax.set_xlabel('', fontsize=0)  # 가로축 제목 삭제
-            ax.set_ylabel('최대 온도 (°C)', fontsize=16)
-            plt.xticks(rotation=45)
-            plt.grid(True)
-            st.pyplot(fig)
-
+    # 📌 그래프 선택 및 시각화 실행
+    graph_type = st.selectbox("📊 보고 싶은 그래프를 선택하세요:", ["최근 24시간 평균 온도", "2주 평균 온도"])
     plot_graph(graph_type)

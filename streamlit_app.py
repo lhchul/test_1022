@@ -6,7 +6,7 @@ import matplotlib.font_manager as fm
 import os
 import platform
 
-# 📌 운영체제별 폰트 경로 설정 함수
+# 📌 폰트 경로 설정 및 존재 여부 확인 함수
 def find_nanum_font():
     system = platform.system()
     font_paths = {
@@ -17,9 +17,10 @@ def find_nanum_font():
     font_path = font_paths.get(system)
 
     if font_path and os.path.exists(font_path):
+        st.success(f"폰트 파일을 찾았습니다: {font_path}")
         return font_path
     else:
-        st.error(f"폰트 파일을 찾을 수 없습니다: {font_path}")
+        st.warning(f"폰트 파일을 찾을 수 없습니다: {font_path}")
         return None
 
 # 📌 폰트 설정 함수
@@ -37,10 +38,7 @@ def set_font():
         st.warning("NanumGothic 폰트를 찾을 수 없어 기본 폰트를 사용합니다.")
         plt.rcParams['font.family'] = 'sans-serif'
 
-# 폰트와 CSS 적용
-set_font()
-
-# 📌 CSS 스타일 설정 함수
+# 📌 CSS 스타일 적용 함수
 def set_css():
     st.markdown("""
         <style>
@@ -61,6 +59,8 @@ def set_css():
         </style>
     """, unsafe_allow_html=True)
 
+# 📌 폰트와 CSS 적용
+set_font()
 set_css()
 
 # 📌 타이틀 설정
@@ -77,7 +77,7 @@ if uploaded_file:
     data = data.dropna(subset=['온도'])
     data = data[data['온도'] > 0]
 
-    # 📌 통합국명 선택 및 데이터 필터링
+    # 📌 통합국명 선택 및 필터링
     unique_locations = sorted(data['통합국명'].unique())
     st.markdown('<p class="bold-larger">📍 통합국명을 선택하세요:</p>', unsafe_allow_html=True)
     selected_location = st.selectbox("", ["전체"] + unique_locations)
@@ -92,7 +92,7 @@ if uploaded_file:
         mime='text/csv'
     )
 
-    # 📌 데이터의 마지막 날짜 기준으로 1주일 데이터 필터링
+    # 📌 최근 1주일 데이터 필터링
     last_date = filtered_data['날짜'].max()
     one_week_data = filtered_data[filtered_data['날짜'] >= last_date - timedelta(days=7)]
 
